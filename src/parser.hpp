@@ -10,11 +10,12 @@ using std::string;
 
 class BytecodeParser {
 private:
-  std::ifstream* _input;
+  int _pos;
+  const char * _input;
 
-  u1 read_u1() const { u1 holder = 0; _input->read((char*)&holder, sizeof(u1)); return holder; }
-  u2 read_u2() const { return (read_u1() <<  8) | read_u1(); }
-  u4 read_u4() const { return (read_u2() << 16) | read_u2(); }
+  u1 read_u1() { return this->_input[this->_pos++]; }
+  u2 read_u2() { return (read_u1() <<  8) | read_u1(); }
+  u4 read_u4() { return (read_u2() << 16) | read_u2(); }
 
   void parse_utf8_info();
   void parse_integer_info();
@@ -38,8 +39,9 @@ private:
   void parse_attribute_info();
 
 public:
-  BytecodeParser(std::ifstream* input) {
+  BytecodeParser(char * input) {
     this->_input = input;
+    this->_pos = 0;
   }
 
   ClassFile* parse();

@@ -20,8 +20,8 @@ ClassFile* BytecodeParser::parse() {
       case  1: parse_utf8_info(); break;
       case  3: parse_integer_info(); break;
       case  4: parse_float_info(); break;
-      case  5: parse_long_info(); break;
-      case  6: parse_double_info(); break;
+      case  5: parse_long_info(); i++; break;
+      case  6: parse_double_info(); i++; break;
       case  7: parse_class_info(); break;
       case  8: parse_string_info(); break;
       case  9: parse_fieldref_info(); break;
@@ -54,9 +54,7 @@ ClassFile* BytecodeParser::parse() {
 
   std::cout << "mcount:"  << std::hex << (mcount = read_u2()) << std::endl;
   for (int i=0; i<mcount; i++) {
-    parse_field_info();
     parse_method_info();
-    parse_attribute_info();
   }
 
   std::cout << "acount:"  << std::hex << (acount = read_u2()) << std::endl;

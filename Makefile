@@ -1,2 +1,2 @@
 all:
-	g++ src/*.cpp -o build/bytenam
+	g++ src/*.cpp -o build/bytenam -lzip
