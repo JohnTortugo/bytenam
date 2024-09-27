@@ -23,33 +23,33 @@ ClassFile* BytecodeParser::parse() {
 
 vector<ConstantPoolInfo*>* BytecodeParser::parse_constant_pool() {
   auto cp_count = read_u2();
-  auto cp = new vector<ConstantPoolInfo*>(cp_count);
+  auto cp = new vector<ConstantPoolInfo*>();
+
+  cp->reserve(cp_count);
+  cp->push_back(new ConstantPoolInfo());
 
   for (int i=1; i<cp_count; i++) {
     u1 tag = read_u1();
-    ConstantPoolInfo* entry = nullptr;
 
     switch (tag) {
-      case  1: entry = parse_utf8_info(); break;
-      case  3: entry = parse_integer_info(); break;
-      case  4: entry = parse_float_info(); break;
-      case  5: entry = parse_long_info(); i++; break;
-      case  6: entry = parse_double_info(); i++; break;
-      case  7: entry = parse_class_info(); break;
-      case  8: entry = parse_string_info(); break;
-      case  9: entry = parse_fieldref_info(); break;
-      case 10: entry = parse_methodref_info(); break;
-      case 11: entry = parse_interface_methodref_info(); break;
-      case 12: entry = parse_name_and_type_info(); break;
-      case 15: entry = parse_method_handle_info(); break;
-      case 16: entry = parse_method_type_info(); break;
-      case 17: entry = parse_dynamic_info(); break;
-      case 18: entry = parse_invoke_dynamic_info(); break;
-      case 19: entry = parse_module_info(); break;
-      case 20: entry = parse_package_info(); break;
+      case  1: cp->push_back(parse_utf8_info()); break;
+      case  3: cp->push_back(parse_integer_info()); break;
+      case  4: cp->push_back(parse_float_info()); break;
+      case  5: cp->push_back(parse_long_info()); cp->push_back(new ConstantPoolInfo()); i++; break;
+      case  6: cp->push_back(parse_double_info()); cp->push_back(new ConstantPoolInfo()); i++; break;
+      case  7: cp->push_back(parse_class_info()); break;
+      case  8: cp->push_back(parse_string_info()); break;
+      case  9: cp->push_back(parse_fieldref_info()); break;
+      case 10: cp->push_back(parse_methodref_info()); break;
+      case 11: cp->push_back(parse_interface_methodref_info()); break;
+      case 12: cp->push_back(parse_name_and_type_info()); break;
+      case 15: cp->push_back(parse_method_handle_info()); break;
+      case 16: cp->push_back(parse_method_type_info()); break;
+      case 17: cp->push_back(parse_dynamic_info()); break;
+      case 18: cp->push_back(parse_invoke_dynamic_info()); break;
+      case 19: cp->push_back(parse_module_info()); break;
+      case 20: cp->push_back(parse_package_info()); break;
     }
-
-    cp->push_back(entry);
   }
   return cp;
 }
@@ -83,10 +83,13 @@ vector<MethodInfo*>* BytecodeParser::parse_methods() {
 
 CPUtf8* BytecodeParser::parse_utf8_info() {
   u2 length = read_u2();
-  vector<u1>* bytes = new vector<u1>(length);
+
+  char* bytes = new char[length+1];
   for (int i=0; i<length; i++) {
-    bytes->push_back(read_u1());
+    bytes[i] = read_u1();
   }
+  bytes[length] = '\0';
+
   return new CPUtf8(bytes);
 }
 
@@ -177,7 +180,8 @@ MethodInfo* BytecodeParser::parse_method_info() {
 
 vector<AttributeInfo*>* BytecodeParser::parse_attributes() {
   u2 acount = read_u2();
-  vector<AttributeInfo*>* attributes = new vector<AttributeInfo*>(acount);
+  vector<AttributeInfo*>* attributes = new vector<AttributeInfo*>();
+  attributes->reserve(acount);
 
   for (int i=0; i<acount; i++) {
     u2 name = read_u2();

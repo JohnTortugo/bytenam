@@ -2,17 +2,27 @@
 #define __CONSTANTPOOL_HPP__
 
 #include <vector>
+#include <string>
 #include "types.hpp"
 using namespace std;
 
-class ConstantPoolInfo { };
+class ConstantPoolInfo { 
+protected:
+  friend class ClassFile;
+  virtual void relocate(vector<ConstantPoolInfo*>* cp) { }
+};
 
 class CPUtf8 : public ConstantPoolInfo {
 private:
-  vector<u1>* bytes; 
+  string val; 
+
 public:
-  CPUtf8(vector<u1>* bytes) {
-    this->bytes = bytes;
+  CPUtf8(const char* bytes) {
+    this->val = string(bytes);
+  }
+
+  const string& value() {
+    return this->val;
   }
 };
 
@@ -23,6 +33,10 @@ public:
   CPInteger(u4 bytes) {
     this->bytes = bytes;
   }
+
+  int value() {
+    return bytes;
+  }
 };
 
 class CPFloat : public ConstantPoolInfo{
@@ -31,6 +45,10 @@ private:
 public:
   CPFloat(u4 bytes) {
     this->bytes = bytes;
+  }
+
+  float value() {
+    return (float) bytes;
   }
 };
 
@@ -43,6 +61,10 @@ public:
     this->high_bytes = high_bytes;
     this->low_bytes = low_bytes;
   }
+
+  long value() {
+    return ((long) high_bytes << 32) | low_bytes;
+  }
 };
 
 class CPDouble : public ConstantPoolInfo{
@@ -54,23 +76,46 @@ public:
     this->high_bytes = high_bytes;
     this->low_bytes = low_bytes;
   }
+
+  double value() {
+    return (double) (((long) high_bytes << 32) | low_bytes);
+  }
 };
 
 class CPClass : public ConstantPoolInfo{
 private: 
   u2 name_index;
+  CPUtf8* name_utf8 = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->name_utf8 = (CPUtf8*) cp->at(name_index);
+  }
 public:
   CPClass(u2 name_index) {
     this->name_index = name_index;
   }
+
+  const string& name() {
+    return this->name_utf8->value();
+  }
 };
 
-class CPString : public ConstantPoolInfo{
+class CPString : public ConstantPoolInfo {
 private: 
-  u2 string_index;  
+  u2 string_index;
+  CPUtf8* str = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->str = (CPUtf8*) cp->at(string_index);
+  }
+
 public:
   CPString(u2 string_index) {
     this->string_index = string_index;
+  }
+
+  const string& value() {
+    return this->str->value();
   }
 };
 
@@ -111,6 +156,13 @@ class CPNameAndType : public ConstantPoolInfo{
 private: 
   u2 name_index;
   u2 descriptor_index; 
+  CPUtf8* name_utf8 = nullptr;
+  CPUtf8* descriptor_utf8 = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->name_utf8 = (CPUtf8*) cp->at(name_index);
+    this->descriptor_utf8 = (CPUtf8*) cp->at(descriptor_index);
+  }
 public:
   CPNameAndType(u2 name_index, u2 descriptor_index) {
     this->name_index = name_index;
@@ -132,6 +184,11 @@ public:
 class CPMethodType : public ConstantPoolInfo{
 private: 
   u2 descriptor_index;  
+  CPUtf8* name_utf8 = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->name_utf8 = (CPUtf8*) cp->at(descriptor_index);
+  }
 public:
   CPMethodType(u2 descriptor_index) {
     this->descriptor_index = descriptor_index;
@@ -163,6 +220,11 @@ public:
 class CPModule : public ConstantPoolInfo{
 private: 
   u2 name_index; 
+  CPUtf8* name_utf8 = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->name_utf8 = (CPUtf8*) cp->at(name_index);
+  }
 public:
   CPModule(u2 name_index) {
     this->name_index = name_index;
@@ -172,6 +234,11 @@ public:
 class CPPackage : public ConstantPoolInfo{
 private: 
   u2 name_index; 
+  CPUtf8* name_utf8 = nullptr;
+
+  void relocate(vector<ConstantPoolInfo*>* cp) {
+    this->name_utf8 = (CPUtf8*) cp->at(name_index);
+  }
 public:
   CPPackage(u2 name_index) {
     this->name_index = name_index;

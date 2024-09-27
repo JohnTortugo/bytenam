@@ -25,6 +25,16 @@ private:
   vector<MethodInfo*>* _methods;
   vector<AttributeInfo*>* _attributes;
 
+  // This will populate the objects with a copy of their actual data
+  // based on the index that they point to in the constant pool.
+  void relocate() {
+    for (auto entry : *_constant_pool) entry->relocate(this->_constant_pool);
+    for (auto entry : *_interfaces) entry->relocate(this->_constant_pool);
+    for (auto entry : *_fields) entry->relocate(this->_constant_pool);
+    for (auto entry : *_methods) entry->relocate(this->_constant_pool);
+    for (auto entry : *_attributes) entry->relocate(this->_constant_pool);
+  }
+
 public:
   ClassFile(u2 major, u2 minor, u2 flags, u2 tclass, u2 sclass, 
             vector<ConstantPoolInfo*>* cp, vector<InterfaceInfo*>* interfaces,
@@ -41,10 +51,18 @@ public:
     this->_fields = fields;
     this->_methods = methods;
     this->_attributes = attributes;
+
+    relocate();
+  }
+
+  const string& name() {
+    auto cinfo = (CPClass*)_constant_pool->at(_this_class);
+    return cinfo->name();
   }
 
   vector<FieldInfo*>* fields() { return _fields; }
   vector<MethodInfo*>* methods() { return _methods; }
+  vector<InterfaceInfo*>* interfaces() { return _interfaces; }
 };
 
 #endif // __CLASSFILE_HPP__
